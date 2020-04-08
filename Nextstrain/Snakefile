@@ -1,0 +1,18 @@
+configfile:
+    "config.json"
+
+# build tree
+rule build:
+    input:
+        config['merged_data']
+    output:
+        {input}+"/auspice/"
+    shell:
+        nextstrain build {input}
+  
+# serve tree
+rule view:
+    input:
+        config['merged_data']+"/auspice/"
+    shell:
+        nextstrain view {input}

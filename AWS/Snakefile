@@ -1,0 +1,18 @@
+
+# update nextstrain
+rule update_ns:
+    shell:
+        "cd ncov"
+        "git pull"
+
+# integrate external with nz
+## Downsample
+
+## sequence data
+
+## meta data
+
+## write to nextstrain directory
+
+
+
