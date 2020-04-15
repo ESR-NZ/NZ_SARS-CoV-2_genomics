@@ -2,9 +2,11 @@
 
 ##Set variables, hardcoded to work on production server with the strict directory structure.
 RUN_ID=$1
-DATA_DIR=/NGS/active/VIR/SARS-CoV2/run_links #Where the Nanopore raw data will be stored
-ASSEMBLIES_DIR=/NGS/active/VIR/SARS-CoV2/analysis #Where the analysed data will live 
-ARTIC_DIR=/NGS/active/VIR/SARS-CoV2/Artic_pipeline/artic-ncov2019 #Where the ref genome and primer scheme live
+
+
+## decide how to point to config file path
+source ./artic_pipeline_config
+
 
 ## check for the existance of command line arg
 [ -z "$1" ] && echo "No data directory supplied" && exit
@@ -18,9 +20,6 @@ ARTIC_DIR=/NGS/active/VIR/SARS-CoV2/Artic_pipeline/artic-ncov2019 #Where the ref
 echo ""
 #Set variable to point to base directory for this runs analysis output 
 ANALYSIS_DIR=$ASSEMBLIES_DIR/${RUN_ID}_analysis
-
-## boot the conda env
-source /opt/bioinf/anaconda3/anaconda3-5.0.0.1/bin/activate /opt/bioinf/anaconda3/anaconda3-5.0.0.1/envs/artic-ncov2019-medaka
 
 
 ## Call the basecalling SLURM script (on GPU server)
