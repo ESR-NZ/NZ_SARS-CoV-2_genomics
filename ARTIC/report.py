@@ -50,6 +50,9 @@ def GatherStats(file_list, file_type="fasta"):
         hist = Counter(sorted(gap_lenghts))
         total_Ns = sequence.count('N')
         
+        if len(sequence) <= 1:
+            print("[WARNING] empty sequence detected {}".format(sid))
+
         # Store in metric dictionary
         metrics = {} 
         #metrics['sequence'] = sequence   
@@ -57,7 +60,7 @@ def GatherStats(file_list, file_type="fasta"):
         metrics['total_Ns'] = total_Ns
         metrics['num_gaps'] = len(Ns_list)
         metrics['hist'] = hist
-        metrics['pass_QC'] = Num_gaps < 10 and total_Ns < 3000
+        metrics['pass_QC'] = Num_gaps < 10 and total_Ns < 3000 and len(sequence) > 29000
         
         # Add to global dictionary
         file_list[sid]["metrics"] = metrics
