@@ -20,9 +20,11 @@ esac
 done
 set -- "${POSITIONAL[@]}" 
 
+
+
 RUN_ID=$1
 
-
+## bring in the config variables and activate the conda env
 source $CONFIG
 source $ACTIVATE $ARTIC_MEDAKA
 
@@ -30,9 +32,10 @@ echo "Config file = ${CONFIG}"
 echo "DATA_DIR = ${DATA_DIR}"
 echo "ASSEMBLIES_DIR = ${ASSEMBLIES_DIR}"
 
-
+## check args are not empty
 [ ! -z $CONFIG] && echo "Please suppply config file path" && exit 1
 [ ! -z $RUN_ID] && echo "Please suppply run-id" && exit 1
+
 ## exit if supplied directory is invalid
 [ ! -d $DATA_DIR/$RUN_ID ] && echo "$RUN_ID invalid data directory" && exit 1
 ## Check if the data has already been processed, caution overwrite
@@ -43,7 +46,6 @@ echo "ASSEMBLIES_DIR = ${ASSEMBLIES_DIR}"
 echo ""
 #Set variable to point to base directory for this runs analysis output 
 ANALYSIS_DIR=$ASSEMBLIES_DIR/${RUN_ID}_analysis
-
 
 ## Call the basecalling SLURM script (on GPU server)
 echo "Running guppy gpu basecalling for $RUN_ID"
@@ -78,10 +80,8 @@ CONSENSUN_DIR=$ANALYSIS_DIR/consensus
 mkdir $CONSENSUN_DIR
 cp $ANALYSIS_DIR/${RUN_ID}_assemblies/*.consensus.fasta $CONSENSUN_DIR
 
-
-
 ## Run the reporting script
-#report.py --consensus_dir $CONSENSUN_DIR --bucket $AWS_BUCKET
+report.py --consensus_dir $CONSENSUN_DIR --bucket $AWS_BUCKET
 
 
 echo ""
