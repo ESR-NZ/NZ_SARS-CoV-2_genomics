@@ -1,0 +1,8 @@
+DATA_DIR=./Data  #Where the Nanopore raw data will be stored
+ASSEMBLIES_DIR=./ASSEMBLIES_DIR #Where the analysed data will live 
+ARTIC_DIR=./artic-ncov2019 #Where the ref genome and primer scheme live
+AWS_BUCKET=
+
+##Conda env 
+ACTIVATE=anaconda3/anaconda3-5.0.0.1/bin/activate ARTIC_MEDAKA=/anaconda3/anaconda3-5.0.0.1/envs/artic-ncov2019-medaka
+
