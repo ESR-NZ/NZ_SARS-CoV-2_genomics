@@ -5,7 +5,6 @@
 #SBATCH -o artic_assemble.out
 #SBATCH -e artic_assemble.err
 
-source /opt/bioinf/anaconda3/anaconda3-5.0.0.1/bin/activate /opt/bioinf/anaconda3/anaconda3-5.0.0.1/envs/artic-ncov2019-medaka
 
 ## Jump into the assembly directroy 
 cd $ANALYSIS_DIR/${RUN_ID}_assemblies
@@ -27,4 +26,3 @@ srun artic minion --medaka\
 
 
 
-conda deactivate

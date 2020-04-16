@@ -88,3 +88,4 @@ echo ""
 echo "Report for $RUN_ID"
 cat $CONSENSUN_DIR/consensus_report.txt
 
+conda deactivate
