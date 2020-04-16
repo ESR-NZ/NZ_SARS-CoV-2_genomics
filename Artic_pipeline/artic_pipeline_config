@@ -1,7 +1,8 @@
-DATA_DIR=/NGS/active/VIR/SARS-CoV2/run_links #Where the Nanopore raw data will be stored
-ASSEMBLIES_DIR=/NGS/active/VIR/SARS-CoV2/analysis #Where the analysed data will live 
-ARTIC_DIR=/NGS/active/VIR/SARS-CoV2/Artic_pipeline/artic-ncov2019 #Where the ref genome and primer scheme live
+DATA_DIR=./Data  #Where the Nanopore raw data will be stored
+ASSEMBLIES_DIR=./ASSEMBLIES_DIR #Where the analysed data will live 
+ARTIC_DIR=./artic-ncov2019 #Where the ref genome and primer scheme live
+AWS_BUCKET=
 
 ##Conda env 
-source ACTIVATE=/opt/bioinf/anaconda3/anaconda3-5.0.0.1/bin/activate ARTIC_MEDAKA=/opt/bioinf/anaconda3/anaconda3-5.0.0.1/envs/artic-ncov2019-medaka
+ACTIVATE=anaconda3/anaconda3-5.0.0.1/bin/activate ARTIC_MEDAKA=/anaconda3/anaconda3-5.0.0.1/envs/artic-ncov2019-medaka
 
