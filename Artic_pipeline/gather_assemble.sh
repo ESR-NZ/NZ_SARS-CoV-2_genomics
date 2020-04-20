@@ -19,7 +19,6 @@ srun artic guppyplex --min-length 400 --max-length 700\
 
 wait
 
-
 srun artic minion --medaka\
  --normalise 200 --threads 24 --scheme-directory $ARTIC_DIR/primer_schemes\
  --read-file ${RUN_ID}_${BARCODE}.fastq nCoV-2019/V3 ${RUN_ID}_${BARCODE}

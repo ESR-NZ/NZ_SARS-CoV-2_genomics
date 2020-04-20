@@ -21,17 +21,24 @@ if not args.consensus_dir:
 CONSENSUN_DIR = args.consensus_dir    
 DEBUG = args.verbose
 
+
 def GatherFiles(file_path, file_type="fasta"):
+    
     file_list={}
-    files_paths = [os.path.join(file_path, file) for file in glob.glob(file_path+"*."+file_type)]
+    files_paths = [os.path.join(file_path, file) for file in os.listdir(CONSENSUN_DIR) if file.endswith(file_type)]
+    #files_paths = [os.path.join(file_path, file) for file in glob.glob(file_path+"*."+file_type)]
+    
     for fasta_file in files_paths:
         record = SeqIO.read(fasta_file, file_type)
         sid = record.id.split('/')[0].split('_')[-1]
+        
         if DEBUG:
             print(record.id, sid)
         file_list[sid] = {}
         file_list[sid]["file"] = fasta_file
+    
     return file_list
+
 
 ## Gather stats for sequences
 def GatherStats(file_list, file_type="fasta"): 
@@ -97,9 +104,6 @@ def Upload(file_list, bucket):
                 print("aws s3 cp {0} {1}".format(file_list[sid]["file"], bucket))
     #pip3 install nextstrain-cli --user
     #nextstrain remote upload {bucket} {file(s)}
-
-
-
 
 
 seqstats = GatherFiles(CONSENSUN_DIR)
