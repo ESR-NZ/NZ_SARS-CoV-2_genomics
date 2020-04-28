@@ -57,7 +57,7 @@ echo""
 
 ## Call the deplexing SLURM script (CPUs on Production servers)
 echo "Running barcode demultiplexing for $RUN_ID"
-DEPLEXING_PID=$(sbatch --export=ALL,RUN_ID=$RUN_ID,ANALYSIS_DIR=$ANALYSIS_DIR --wait --parsable $DIR/deplex_prod.sh)
+DEPLEXING_PID=$(sbatch --export=ALL,RUN_ID=$RUN_ID,ANALYSIS_DIR=$ANALYSIS_DIR --wait $DIR/deplex_prod.sh)
 
 ## Count the number of barcoded DIRs made by the deplexing to pass to next script
 BC_LIST="$ANALYSIS_DIR/bc.list"
@@ -89,5 +89,5 @@ echo ""
 echo "Report for $RUN_ID"
 cat $CONSENSUN_DIR/consensus_report.txt
 
-#conda deactivate
+conda deactivate
 
