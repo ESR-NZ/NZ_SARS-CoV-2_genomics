@@ -22,10 +22,12 @@ set -- "${POSITIONAL[@]}"
 
 RUN_ID=$1
 
+
 ## Default to config in run dir to save typing each time
-[ -z "$CONFIG" ] && CONFIG=artic_pipeline_config
+[ -z "$CONFIG" ] && CONFIG=./artic_pipeline_config
 ## bring in the config variables and activate the conda env
 source $CONFIG
+
 source $ACTIVATE $ARTIC_MEDAKA
 ##Check for run id 
 [ -z "$RUN_ID" ] && echo "Please suppply run-id" && exit 1
@@ -38,9 +40,10 @@ source $ACTIVATE $ARTIC_MEDAKA
 echo ""
 #Set variable to point to base directory for this runs analysis output 
 ANALYSIS_DIR=$ASSEMBLIES_DIR/${RUN_ID}_analysis
+
 ##Script base dir for finding the resources for the pipeline
 DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null 2>&1 && pwd )"
-ARTIC_DIR=$DIR/artic-ncov2019
+#ARTIC_DIR=$DIR/artic-ncov2019
 #Sanity check
 
 echo "Config file = ${CONFIG}"
@@ -53,7 +56,6 @@ echo "Run_id  = $RUN_ID"
 ## Call the basecalling SLURM script (on GPU server)
 echo "Running guppy gpu basecalling for $RUN_ID"
 sbatch --export=ALL,RUN_ID=$RUN_ID,DATA_DIR=$DATA_DIR,ASSEMBLIES_DIR=$ASSEMBLIES_DIR --wait $DIR/basecall_gpu.sh 
-echo""
 
 ## Call the deplexing SLURM script (CPUs on Production servers)
 echo "Running barcode demultiplexing for $RUN_ID"
@@ -71,7 +73,7 @@ NUM_BC=$(cat $BC_LIST)
 echo "Barcodes used: $NUM_BC"
 echo ""
 
-## Call array job to gather and length filter reads in each barcode dir
+## Call array job to gather, length filter and assemble reads in each barcode dir
 echo "Gathering reads for assembly for $RUN_ID"
 sbatch --export=ALL,RUN_ID=$RUN_ID,ANALYSIS_DIR=$ANALYSIS_DIR,ARTIC_DIR=$ARTIC_DIR --wait --array=$BC_ARRAY $DIR/gather_assemble.sh
 

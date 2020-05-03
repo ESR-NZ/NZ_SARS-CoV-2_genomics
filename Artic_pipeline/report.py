@@ -25,7 +25,7 @@ DEBUG = args.verbose
 def GatherFiles(file_path, file_type="fasta"):
     
     file_list={}
-    files_paths = [os.path.join(file_path, file) for file in os.listdir(CONSENSUN_DIR) if file.endswith(file_type)]
+    files_paths = [os.path.join(file_path, file) for file in os.listdir(file_path) if file.endswith(file_type)]
     #files_paths = [os.path.join(file_path, file) for file in glob.glob(file_path+"*."+file_type)]
     
     for fasta_file in files_paths:
@@ -111,7 +111,7 @@ GatherStats(seqstats)
 
 ##Write to file
 f = open(os.path.join(CONSENSUN_DIR, "consensus_report.txt"), "a")
-for k in seqstats:
+for k in sorted(seqstats):
     f.write('{} - {}:\n'.format(k, seqstats[k]["file"]))
     print("Writing reports")
     Report(seqstats[k]["metrics"], f)
