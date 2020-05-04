@@ -93,3 +93,4 @@ cat $CONSENSUN_DIR/consensus_report.txt
 
 conda deactivate
 
+## Find vcf files 
