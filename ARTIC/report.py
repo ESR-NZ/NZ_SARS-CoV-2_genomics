@@ -60,7 +60,7 @@ def GatherStats(file_list, file_type="fasta"):
         metrics['total_Ns'] = total_Ns
         metrics['num_gaps'] = len(Ns_list)
         metrics['hist'] = hist
-        metrics['pass_QC'] = Num_gaps < 10 and total_Ns < 3000 and len(sequence) > 29000
+        metrics['pass_QC'] = total_Ns < 3000 and len(sequence) > 29000
         
         # Add to global dictionary
         file_list[sid]["metrics"] = metrics
