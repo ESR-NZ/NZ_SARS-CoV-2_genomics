@@ -27,7 +27,9 @@ printf "%s\n" "${SECOND_HALF[@]}" > half_1.list
 
 ## load some stuff
 MODULEPATH=/usr/share/Modules/modulefiles:/etc/modulefiles:/opt/dsc/modulefiles
-module load guppy-gpu/3.4.4
+
+module unload guppy-gpu/3.4.4
+#module load guppy-gpu/3.6.0
 
 ##Run the jobs
 srun guppy_basecaller --disable_pings\
@@ -43,6 +45,7 @@ srun guppy_basecaller --disable_pings\
 wait
 
 module unload guppy-gpu/3.4.4
+#module unload guppy-gpu/3.6.0
 
 ## Clean up list files 
 rm half_{0,1}.list
