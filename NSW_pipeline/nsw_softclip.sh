@@ -28,7 +28,8 @@ bwa_directory=${designation_directory}/bwa_align
 vcf_directory=${designation_directory}/vcf
 consensus_directory=${designation_directory}/consensus
 ivar=${designation_directory}/ivar
-analysis_files=/NGS/active/VIR/SARS-CoV2/analysis/illumina/nsw/analysis_pipeline
+analysis_files="."
+ref_directory="reference/"
 
 ##Define the files to be processed, for KSC_miseq reads no need to change 
 
@@ -139,7 +140,7 @@ vcffilter -f "QUAL > 30" -f "DP > 19" ${vcf_directory}/${x}_maskA.raw.vcf > ${vc
 vcffilter -f "QUAL > 30" -f "DP > 19" ${vcf_directory}/${x}_maskB.raw.vcf > ${vcf_directory}/${x}_maskB_f.vcf
 
 ##primers regions, diploid at least not 1, also higher depth (?) ##
-bcftools mpileup --max-depth 1000 -Ou -f ${analysis_files}/nCoV-2019.reference.fasta ${bwa_directory}/${x}_all_sortdup.bam  -R ${analysis_files}/NSW_primer.bed | bcftools call --ploidy 1 -mv > ${vcf_directory}/${x}_primer.raw.vcf
+bcftools mpileup --max-depth 1000 -Ou -f ${ref_directory}/nCoV-2019.reference.fasta ${bwa_directory}/${x}_all_sortdup.bam  -R ${analysis_files}/NSW_primer.bed | bcftools call --ploidy 1 -mv > ${vcf_directory}/${x}_primer.raw.vcf
 vcffilter -f "QUAL > 30" -f "DP > 38" ${vcf_directory}/${x}_primer.raw.vcf > ${vcf_directory}/${x}_primer.f.vcf
 
 ##combine all the vcfs
@@ -148,8 +149,8 @@ bgzip -c ${vcf_directory}/${x}_comb_f.vcf > ${vcf_directory}/${x}_comb_f.vcf.gz
 tabix -p vcf ${vcf_directory}/${x}_comb_f.vcf.gz
 
 ##ivar analysis to detect minor alleles should could be interesting later. slightly more strigent than default, because fewer mutations? not sure##
-samtools mpileup -aa -d 1000000 -Q 0 -A -f ${analysis_files}/nCoV-2019.reference.fasta ${bwa_directory}/${x}_all_sortdup.bam | \
-ivar variants -p ${x}_ivar -q 30 -t 0.05 -m 20 -r ${analysis_files}/nCoV-2019.reference.fasta -g ${analysis_files}/annotation/GCF_009858895.2_ASM985889v3_genomic_mod.gff
+samtools mpileup -aa -d 1000000 -Q 0 -A -f ${ref_directory}/nCoV-2019.reference.fasta ${bwa_directory}/${x}_all_sortdup.bam | \
+ivar variants -p ${x}_ivar -q 30 -t 0.05 -m 20 -r ${ref_directory}/nCoV-2019.reference.fasta -g ${analysis_files}/annotation/GCF_009858895.2_ASM985889v3_genomic_mod.gff
 mv ${x}_ivar.tsv ${ivar}
 bedtools intersect -a ${ivar}/${x}_ivar.tsv -b ${analysis_files}/NSW_primer.bed  > ${ivar}/${x}_ivar_primer.tsv
 
@@ -162,7 +163,7 @@ bedtools intersect -a ${ivar}/${x}_ivar.tsv -b ${analysis_files}/NSW_primer.bed 
 grep -v '+[A,G,T,C]\|-[A,G,T,C]' ${ivar}/${x}_ivar.tsv | awk 'BEGIN {FS="\t";OFS="\t"} $11 < 0.8 && $11 > 0.19 {print $1, $2-1, $2, "IVAR", "freq:"$11}' >> ${bwa_directory}/${x}_badpostion.bed
 
 ##make consensus##
-cat ${analysis_files}/nCoV-2019.reference.fasta | bcftools consensus  ${vcf_directory}/${x}_comb_f.vcf.gz > ${consensus_directory}/${x}_premask.fasta
+cat ${ref_directory}/nCoV-2019.reference.fasta | bcftools consensus  ${vcf_directory}/${x}_comb_f.vcf.gz > ${consensus_directory}/${x}_premask.fasta
 
 ##mask low depth regions and confusing alleles in consensus and mask dodgy sites
 ##http://virological.org/t/issues-with-sars-cov-2-sequencing-data/473

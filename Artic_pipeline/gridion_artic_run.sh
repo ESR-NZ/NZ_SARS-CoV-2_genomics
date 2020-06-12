@@ -86,7 +86,7 @@ for lib in ${PATHS_ARRAY[@]}; do
     sbatch --export=ALL,ANALYSIS_DIR=$ANALYSIS_DIR,ARTIC_DIR=$ARTIC_DIR,LIB=$lib --wait --array=$BC_ARRAY $DIR/gather_assemble_grid.sh
     
     ##Clean up and run report script
-    mv ${lib}/$(basename $lib)_barcode{0,1,2}* ${lib}_assemblies
+    mv ${lib}_barcode{0,1,2}* ${lib}_assemblies
     cp ${lib}_assemblies/*.consensus.fasta ${lib}_consensus
     $DIR/report_grid.py -c ${lib}_consensus
 
@@ -94,3 +94,4 @@ done
 
 conda deactivate
 
+## mv: cannot stat ‘/NGS/active/VIR/SARS-CoV2/analysis/GridIon_assemblies/20200606_analysis/20200606_lib_1/20200606_lib_1/20200606_lib_1_barcode0*’: No such file or directory
