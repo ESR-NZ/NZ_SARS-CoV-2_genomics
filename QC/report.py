@@ -85,7 +85,7 @@ def Report(metric_dict, fstream):
 def Upload(file_list, bucket):
     if not bucket:
         print("Not uploading data")
-        return 1
+        #return 1
     
     #guix package -i awscli
     #os.system("guix package -i awscli")
@@ -94,7 +94,8 @@ def Upload(file_list, bucket):
         if DEBUG:
             print(sid, file_list[sid]["metrics"]["pass_QC"])
         if file_list[sid]["metrics"]["pass_QC"]:
-            os.system("aws s3 cp {0} {1}".format(file_list[sid]["file"], bucket))
+            if bucket:
+                os.system("aws s3 cp {0} {1}".format(file_list[sid]["file"], bucket))
             os.system("cp {0} {1}".format(file_list[sid]["file"], "/NGS/active/VIR/SARS-CoV2/results/consensus/PASS_QC/"))
             if DEBUG:
                 print("aws s3 cp {0} {1}".format(file_list[sid]["file"], bucket))

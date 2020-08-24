@@ -17,13 +17,13 @@ echo "BARCODE = $BARCODE"
 echo ""
 
 ## filter by length
-artic guppyplex --skip-quality-check --min-length 400 --max-length 700\
+srun artic guppyplex --min-length 400 --max-length 700\
  --directory ${LIB}_barcodes/$BARCODE --prefix $(basename $LIB) 
 
 
-artic minion --medaka\
- --normalise 200 --threads $SLURM_CPUS_PER_TASK --scheme-directory $ARTIC_DIR/primer_schemes\
- --read-file $(basename $LIB)_${BARCODE}.fastq nCoV-2019/V3 $(basename $LIB)_${BARCODE}
+srun artic minion --medaka\
+ --normalise 200 --threads 24 --scheme-directory $ARTIC_DIR/primer_schemes\
+ --read-file $(basename $LIB)_${BARCODE}.fastq nCoV-2019/V1200 $(basename $LIB)_${BARCODE}
 
 
 

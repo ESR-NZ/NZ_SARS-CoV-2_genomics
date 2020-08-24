@@ -13,7 +13,14 @@ LIB_PATH=${PATHS_ARRAY[$SLURM_ARRAY_TASK_ID]} ##index path array by the slurm jo
 
 
 
-module load guppy/3.4.4
-srun guppy_barcoder -t 32 --input_path ${LIB_PATH}_basecalled_link --save_path ${LIB_PATH}_barcodes --require_barcodes_both_ends --barcode_kits EXP-NBD114
-srun guppy_barcoder -t 32 --input_path ${LIB_PATH}_basecalled_link --save_path ${LIB_PATH}_barcodes --require_barcodes_both_ends --barcode_kits EXP-NBD104
-module unload guppy/3.4.4
+
+module load guppy/3.6.0
+echo "Running demultiplexing for EXP-NBD114"
+guppy_barcoder -t $SLURM_CPUS_PER_TASK --input_path ${LIB_PATH}_basecalled_link --save_path ${LIB_PATH}_barcodes --require_barcodes_both_ends --barcode_kits EXP-NBD114
+echo "Running demultiplexing for EXP-NBD104"
+guppy_barcoder -t $SLURM_CPUS_PER_TASK --input_path ${LIB_PATH}_basecalled_link --save_path ${LIB_PATH}_barcodes --require_barcodes_both_ends --barcode_kits EXP-NBD104
+module unload guppy/3.6.0
+
+## changed to 3.6.0 from 3.4.4
+## removed srun from before command
+## should run both barcode sets at once, this didnt work for some reason and   

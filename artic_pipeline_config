@@ -4,5 +4,6 @@ ARTIC_DIR=/NGS/active/VIR/SARS-CoV2/NZ_SARS-CoV-2_genomics/Artic_pipeline/artic-
 AWS_BUCKET=
 
 ##Conda env 
-ACTIVATE=/opt/bioinf/anaconda3/anaconda3-5.0.0.1/bin/activate ARTIC_MEDAKA=/opt/bioinf/anaconda3/anaconda3-5.0.0.1/envs/artic-ncov2019-medaka
+ACTIVATE=conda activate
+ARTIC_MEDAKA=/opt/bioinf/anaconda3/anaconda3-5.0.0.1/envs/artic-ncov2019-medaka
 

@@ -25,11 +25,8 @@ RUN_ID=$1
 ## Default to config in run dir to save typing each time
 [ -z "$CONFIG" ] && CONFIG=./artic_pipeline_config
 ## bring in the config variables and activate the conda env
-
-
 source $CONFIG
-source activate artic-ncov2019-medaka_1.1.3_a
-#source $ACTIVATE $ARTIC_MEDAKA
+source $ACTIVATE $ARTIC_MEDAKA
 ## append DATA_DIR and ASSEMBLIES_DIR with gridion paths
 
 # Gridion paths
@@ -75,7 +72,7 @@ readarray -t PATHS_ARRAY < $LIB_PATHS
 NUM_LIBS_1=$((${#PATHS_ARRAY[@]}-1))
 
 #echo "Running barcode demultiplexing for run $RUN_ID"
-sbatch --export=ALL,ANALYSIS_DIR=$ANALYSIS_DIR,LIB_PATHS=$LIB_PATHS --wait --array=0-$NUM_LIBS_1 $DIR/deplex_prod_grid.sh  
+sbatch --export=ALL,ANALYSIS_DIR=$ANALYSIS_DIR,LIB_PATHS=$LIB_PATHS --wait --array=0-$NUM_LIBS_1 $DIR/deplex_prod_grid_V1200.sh  
 
 # ## Count the number of barcoded DIRs made by the deplexing to pass to next script
 
@@ -86,7 +83,7 @@ for lib in ${PATHS_ARRAY[@]}; do
     echo "With these barcodes: $BC_ARRAY"
     
     ## Call array job to gather, length filter and assemble reads in each barcode dir
-    sbatch --export=ALL,ANALYSIS_DIR=$ANALYSIS_DIR,ARTIC_DIR=$ARTIC_DIR,LIB=$lib --wait --array=$BC_ARRAY $DIR/gather_assemble_grid.sh
+    sbatch --export=ALL,ANALYSIS_DIR=$ANALYSIS_DIR,ARTIC_DIR=$ARTIC_DIR,LIB=$lib --wait --array=$BC_ARRAY $DIR/gather_assemble_grid_V1200.sh
     
     ##Clean up and run report script
     cp ${lib}_assemblies/*.consensus.fasta ${lib}_consensus

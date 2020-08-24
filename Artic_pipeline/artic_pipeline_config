@@ -4,5 +4,5 @@ ARTIC_DIR=./artic-ncov2019 #Where the ref genome and primer scheme live
 AWS_BUCKET=
 
 ##Conda env 
-ACTIVATE=anaconda3/anaconda3-5.0.0.1/bin/activate ARTIC_MEDAKA=/anaconda3/anaconda3-5.0.0.1/envs/artic-ncov2019-medaka
+ACTIVATE=anaconda3/anaconda3-5.0.0.1/bin/activate ARTIC_MEDAKA=/anaconda3/anaconda3-5.0.0.1/envs/artic-ncov2019-medaka_1.1.3
 
