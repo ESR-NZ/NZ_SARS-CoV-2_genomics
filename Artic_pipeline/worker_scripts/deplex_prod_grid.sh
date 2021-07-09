@@ -1,5 +1,5 @@
 #!/bin/bash 
-#SBATCH -p prod
+#SBATCH -p covid_urgent
 #SBATCH --cpus-per-task=32
 #SBATCH -o deplex_grid.%a.out
 #SBATCH -e deplex_grid.%a.err

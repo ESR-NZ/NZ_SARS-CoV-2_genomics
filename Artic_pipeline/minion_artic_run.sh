@@ -12,6 +12,11 @@ case $key in
     shift # past argument
     shift # past value
     ;;
+    -l|--location) # can be 'K' for KSC or 'M' for MASC or 'C' for CSC
+    LOC="$2"
+    shift # past argument
+    shift # past value
+    ;;
     *)    
     POSITIONAL+=("$1")
     shift # past argument
@@ -20,15 +25,58 @@ esac
 done
 set -- "${POSITIONAL[@]}" 
 
-RUN_ID=$1
-
+RUN_ID=$1 
 
 ## Default to config in run dir to save typing each time
-[ -z "$CONFIG" ] && CONFIG=./artic_pipeline_config
+[ -z "$CONFIG" ] && CONFIG=./Artic_pipeline_config
 ## bring in the config variables and activate the conda env
 source $CONFIG
-
 source $ACTIVATE $ARTIC_MEDAKA
+## append DATA_DIR and ASSEMBLIES_DIR with gridion paths
+
+
+# Location specific paths
+if [ -z "$LOC" ] ## if not set, default to KSC settings
+then
+    LOC_DATA='Minion_runs'
+    LOC_ASSEMBLY='nanopore'
+
+elif [ "$LOC" = 'K' ] ## set paths to KSC settings
+then
+    LOC_DATA='Minion_runs'
+    LOC_ASSEMBLY='nanopore'
+
+elif [ "$LOC" = 'M' ] ## set paths to MASC
+then
+    LOC_DATA='MASC'
+    LOC_ASSEMBLY='MASC'
+
+elif [ "$LOC" = 'C' ] ## set paths to MASC
+then
+    LOC_DATA='CSC'
+    LOC_ASSEMBLY='CSC'
+
+fi
+
+
+#Test for in invalid location parameters
+valid='KMC'
+[[ "$LOC" =~ [^$valid] ]] && [ ! -z "$LOC" ] && echo "Invalid location supplied" && exit 1
+
+
+## append DATA_DIR and ASSEMBLIES_DIR with location paths for data in and results out to the right place
+# Gridion paths
+DATA_DIR=${DATA_DIR}/${LOC_DATA}
+ASSEMBLIES_DIR=${ASSEMBLIES_DIR}/${LOC_ASSEMBLY}
+
+#Sanity check
+echo "Config file = ${CONFIG}"
+echo "DATA_DIR = ${DATA_DIR}/${RUN_ID}"
+echo "ASSEMBLIES_DIR = ${ASSEMBLIES_DIR}"
+echo "artic_dir = $ARTIC_DIR"
+echo "Run_id  = $RUN_ID"
+echo ""
+
 ##Check for run id 
 [ -z "$RUN_ID" ] && echo "Please suppply run-id" && exit 1
 ## exit if supplied directory is invalid
@@ -43,7 +91,7 @@ ANALYSIS_DIR=$ASSEMBLIES_DIR/${RUN_ID}_analysis
 
 ##Script base dir for finding the resources for the pipeline
 DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null 2>&1 && pwd )"
-#ARTIC_DIR=$DIR/artic-ncov2019
+DIR=${DIR}/worker_scripts
 #Sanity check
 
 echo "Config file = ${CONFIG}"

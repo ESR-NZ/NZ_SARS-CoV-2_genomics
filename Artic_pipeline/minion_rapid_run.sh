@@ -12,6 +12,16 @@ case $key in
     shift # past argument
     shift # past value
     ;;
+    -l|--location) # can be 'K' for KSC or 'M' for MASC
+    LOC="$2"
+    shift # past argument
+    shift # past value
+    ;;
+    -p|--primers) # can be V3, V1200, V2500
+    PRIMERS="$2"
+    shift # past argument
+    shift # past value
+    ;;
     *)    
     POSITIONAL+=("$1")
     shift # past argument
@@ -23,24 +33,77 @@ set -- "${POSITIONAL[@]}"
 RUN_ID=$1 
 
 ## Default to config in run dir to save typing each time
-[ -z "$CONFIG" ] && CONFIG=./artic_pipeline_config
+[ -z "$CONFIG" ] && CONFIG=./Artic_pipeline_config
 ## bring in the config variables and activate the conda env
 source $CONFIG
 source $ACTIVATE $ARTIC_MEDAKA
 ## append DATA_DIR and ASSEMBLIES_DIR with gridion paths
 
-# Gridion paths
-DATA_DIR=${DATA_DIR}/GridIon/
-ASSEMBLIES_DIR=${ASSEMBLIES_DIR}/GridIon_assemblies
+
+
+# Location specific paths
+if [ -z "$LOC" ] ## if not set, default to KSC settings
+then
+    LOC_DATA='GridIon'
+    LOC_ASSEMBLY='GridIon_assemblies'
+
+
+elif [ "$LOC" = 'K' ] ## set paths to KSC settings
+then
+    LOC_DATA='GridIon'
+    LOC_ASSEMBLY='GridIon_assemblies'
+
+elif [ "$LOC" = 'M' ] ## set paths to MASC
+then
+    LOC_DATA='MASC'
+    LOC_ASSEMBLY='MASC'
+fi
+
+
+#Test for in invalid location parameters
+valid='KM'
+[[ "$LOC" =~ [^$valid] ]] && [ ! -z "$LOC" ] && echo "Invalid location supplied" && exit 1
+
+
+## Primers control flow, this seems redundant...
+
+if [ -z "$PRIMERS" ] ## if not set, default to V1200 settings
+then
+    PRIMER_SET='V1200'
+    
+elif [ "$PRIMERS" = 'V3' ] ## set paths to KSC settings
+then
+    PRIMER_SET='V3'
+
+elif [ "$PRIMERS" = 'V2500' ] ## set paths to MASC
+then
+    PRIMER_SET='V2500'
+
+elif [ "$PRIMERS" = 'V1200' ] ## set paths to MASC
+then
+    PRIMER_SET='V1200'
+
+fi
+
+
+DATA_DIR=${DATA_DIR}/${LOC_DATA}
+ASSEMBLIES_DIR=${ASSEMBLIES_DIR}/${LOC_ASSEMBLY}
+
+#Sanity check
+echo "Config file = ${CONFIG}"
+echo "DATA_DIR = ${DATA_DIR}"
+echo "ASSEMBLIES_DIR = ${ASSEMBLIES_DIR}"
+echo "artic_dir = $ARTIC_DIR"
+echo "Run_id  = $RUN_ID"
+echo "Primer set = $PRIMER_SET"
 
 ##Check for run id 
 [ -z "$RUN_ID" ] && echo "Please suppply run-id" && exit 1
 ## exit if supplied directory is invalid
 [ ! -d $DATA_DIR/$RUN_ID ] && echo "$RUN_ID invalid data directory" && exit 1
 
-
 ## Check if the data has already been processed, caution overwrite
-[ -d $ASSEMBLIES_DIR/GridIon_assemblies/${RUN_ID}_analysis ] && read -p "Warning! Analysis directory already exists for $RUN_ID. Press ENTER to continue and overwrite!"
+[ -d $ASSEMBLIES_DIR/${RUN_ID}_analysis ] && read -p "Warning! Analysis directory already exists for $RUN_ID. Press ENTER to continue and overwrite!"
 
 ## Check for a raw data dir and then make run analysis directory tree
 [ -d $DATA_DIR/$RUN_ID ] && mkdir -p $ASSEMBLIES_DIR/${RUN_ID}_analysis/
@@ -51,7 +114,7 @@ LIBRARIES=$(ls $DATA_DIR/$RUN_ID)
 
 for library in ${LIBRARIES[@]}
 do  
-    mkdir -p $ASSEMBLIES_DIR/${RUN_ID}_analysis/${library}/${library}_{barcodes,assemblies,consensus} 
+    mkdir -p $ASSEMBLIES_DIR/${RUN_ID}_analysis/${library}/${library}_{assemblies,consensus} 
     ln -s $DATA_DIR/$RUN_ID/$library/*/fastq_pass $ASSEMBLIES_DIR/${RUN_ID}_analysis/${library}/${library}_basecalled_link 
 done
 
@@ -62,7 +125,6 @@ ANALYSIS_DIR=$ASSEMBLIES_DIR/${RUN_ID}_analysis
 DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null 2>&1 && pwd )"
 DIR=${DIR}/worker_scripts
 
-## Call the deplexing SLURM script (CPUs on Production servers)
 
 ## File of paths to each lib in run to used in sbatch jobs
 LIB_PATHS="$ANALYSIS_DIR/libs.paths"
@@ -72,20 +134,18 @@ readarray -t PATHS_ARRAY < $LIB_PATHS
 
 NUM_LIBS_1=$((${#PATHS_ARRAY[@]}-1))
 
-echo "Running barcode demultiplexing for run $RUN_ID"
-sbatch --export=ALL,ANALYSIS_DIR=$ANALYSIS_DIR,LIB_PATHS=$LIB_PATHS --wait --array=0-$NUM_LIBS_1 $DIR/deplex_prod_grid_V1200.sh  
 
-# ## Count the number of barcoded DIRs made by the deplex script to pass to next script
+# ## Count the number of barcoded DIRs to pass to next script
 
 
 for lib in ${PATHS_ARRAY[@]}; do
   
-    BC_ARRAY=$(ls -1 ${lib}_barcodes | awk '/barcode/{print $0}' | grep -o '[0-9][0-9]'| tr -s '\n' ',')  # ## This is passed to sbatch array to tell it what barcodes were used 
+    BC_ARRAY=$(ls -1 ${lib}_basecalled_link | awk '/barcode/{print $0}' | grep -o '[0-9][0-9]'| tr -s '\n' ',')  # ## This is passed to sbatch array to tell it what barcodes were used 
     echo "Running assembly for: $lib"
     echo "With these barcodes: $BC_ARRAY"
     
     ## Call array job to gather, length filter and assemble reads in each barcode dir
-    sbatch --export=ALL,ANALYSIS_DIR=$ANALYSIS_DIR,ARTIC_DIR=$ARTIC_DIR,LIB=$lib --wait --array=$BC_ARRAY $DIR/gather_assemble_grid_V1200.sh
+    sbatch --export=ALL,ANALYSIS_DIR=$ANALYSIS_DIR,ARTIC_DIR=$ARTIC_DIR,LIB=$lib,PRIMER_SET=$PRIMER_SET, --wait --array=$BC_ARRAY $DIR/gather_assemble_rapid.sh
     
     ##Clean up and run report script
     cp ${lib}_assemblies/*.consensus.fasta ${lib}_consensus
