@@ -12,13 +12,8 @@ case $key in
     shift # past argument
     shift # past value
     ;;
-    -l|--location) # can be 'K' for KSC or 'M' for MASC
+    -l|--location) # can be 'K' for KSC or 'M' for MASC or 'C' for CSC
     LOC="$2"
-    shift # past argument
-    shift # past value
-    ;;
-    -p|--primers) # can be V3, V1200, V2500
-    PRIMERS="$2"
     shift # past argument
     shift # past value
     ;;
@@ -40,28 +35,32 @@ source $ACTIVATE $ARTIC_MEDAKA
 ## append DATA_DIR and ASSEMBLIES_DIR with gridion paths
 
 
-
 # Location specific paths
 if [ -z "$LOC" ] ## if not set, default to KSC settings
 then
-    LOC_DATA='GridIon'
-    LOC_ASSEMBLY='GridIon_assemblies'
-
+    LOC_DATA='Minion_runs'
+    LOC_ASSEMBLY='nanopore'
 
 elif [ "$LOC" = 'K' ] ## set paths to KSC settings
 then
-    LOC_DATA='GridIon'
-    LOC_ASSEMBLY='GridIon_assemblies'
+    LOC_DATA='Minion_runs'
+    LOC_ASSEMBLY='nanopore'
 
 elif [ "$LOC" = 'M' ] ## set paths to MASC
 then
     LOC_DATA='MASC'
     LOC_ASSEMBLY='MASC'
+
+elif [ "$LOC" = 'C' ] ## set paths to MASC
+then
+    LOC_DATA='CSC'
+    LOC_ASSEMBLY='CSC'
+
 fi
 
 
 #Test for in invalid location parameters
-valid='KM'
+valid='KMC'
 [[ "$LOC" =~ [^$valid] ]] && [ ! -z "$LOC" ] && echo "Invalid location supplied" && exit 1
 
 
@@ -97,28 +96,17 @@ echo "artic_dir = $ARTIC_DIR"
 echo "Run_id  = $RUN_ID"
 echo "Primer set = $PRIMER_SET"
 
+
 ##Check for run id 
 [ -z "$RUN_ID" ] && echo "Please suppply run-id" && exit 1
 ## exit if supplied directory is invalid
 [ ! -d $DATA_DIR/$RUN_ID ] && echo "$RUN_ID invalid data directory" && exit 1
-
 ## Check if the data has already been processed, caution overwrite
-[ -d $ASSEMBLIES_DIR/${RUN_ID}_analysis ] && read -p "Warning! Analysis directory already exists for $RUN_ID. Press ENTER to continue and overwrite!"
-
+[ -d $ASSEMBLIES_DIR/${RUN_ID}_analysis ] && read -p "Warning! Analysis already exists for $RUN_ID. Press ENTER to continue and overwrite!"
 ## Check for a raw data dir and then make run analysis directory tree
-[ -d $DATA_DIR/$RUN_ID ] && mkdir -p $ASSEMBLIES_DIR/${RUN_ID}_analysis/
-
-## Make dirctory tree for run
-## Get the sub_runs for the gridion run
-LIBRARIES=$(ls $DATA_DIR/$RUN_ID)
-
-for library in ${LIBRARIES[@]}
-do  
-    mkdir -p $ASSEMBLIES_DIR/${RUN_ID}_analysis/${library}/${library}_{assemblies,consensus} 
-    ln -s $DATA_DIR/$RUN_ID/$library/*/fastq_pass $ASSEMBLIES_DIR/${RUN_ID}_analysis/${library}/${library}_basecalled_link 
-done
-
-#Set variable to point to base directory for this runs analysis output base dir
+[ -d $DATA_DIR/$RUN_ID ] && mkdir -p $ASSEMBLIES_DIR/${RUN_ID}_analysis/${RUN_ID}_{called,barcodes,assemblies} && echo "Running $RUN_ID"
+echo ""
+#Set variable to point to base directory for this runs analysis output 
 ANALYSIS_DIR=$ASSEMBLIES_DIR/${RUN_ID}_analysis
 
 ##Script base dir for finding the resources for the pipeline
@@ -126,32 +114,42 @@ DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null 2>&1 && pwd )"
 DIR=${DIR}/worker_scripts
 
 
-## File of paths to each lib in run to used in sbatch jobs
-LIB_PATHS="$ANALYSIS_DIR/libs.paths"
+## Call the basecalling SLURM script (on GPU server)
+echo "Running guppy gpu basecalling for $RUN_ID"
+sbatch --export=ALL,RUN_ID=$RUN_ID,DATA_DIR=$DATA_DIR,ASSEMBLIES_DIR=$ASSEMBLIES_DIR --wait $DIR/basecall_gpu.sh 
 
-ls -1 $ANALYSIS_DIR | awk -v var="$ANALYSIS_DIR" '!/libs.paths/ {print var"/"$0"/"$0}' > $LIB_PATHS
-readarray -t PATHS_ARRAY < $LIB_PATHS
+## Call the deplexing SLURM script (CPUs on Production servers)
+echo "Running barcode demultiplexing for $RUN_ID"
+DEPLEXING_PID=$(sbatch --export=ALL,RUN_ID=$RUN_ID,ANALYSIS_DIR=$ANALYSIS_DIR --wait $DIR/deplex_prod.sh)
 
-NUM_LIBS_1=$((${#PATHS_ARRAY[@]}-1))
+## Count the number of barcoded DIRs made by the deplexing to pass to next script
+BC_LIST="$ANALYSIS_DIR/bc.list"
+ls -1 $ANALYSIS_DIR/${RUN_ID}_barcodes | awk '/barcode/{print $0}' > $BC_LIST
 
+## This is passed to sbatch array to tell it what barcodes were used  
+BC_ARRAY=$(grep -o '[0-9][0-9]' $BC_LIST | tr -s '\n' ',')
 
-# ## Count the number of barcoded DIRs to pass to next script
+NUM_BC=$(cat $BC_LIST) 
 
+echo "Barcodes used: $NUM_BC"
+echo ""
 
-for lib in ${PATHS_ARRAY[@]}; do
-  
-    BC_ARRAY=$(ls -1 ${lib}_basecalled_link | awk '/barcode/{print $0}' | grep -o '[0-9][0-9]'| tr -s '\n' ',')  # ## This is passed to sbatch array to tell it what barcodes were used 
-    echo "Running assembly for: $lib"
-    echo "With these barcodes: $BC_ARRAY"
-    
-    ## Call array job to gather, length filter and assemble reads in each barcode dir
-    sbatch --export=ALL,ANALYSIS_DIR=$ANALYSIS_DIR,ARTIC_DIR=$ARTIC_DIR,LIB=$lib,PRIMER_SET=$PRIMER_SET, --wait --array=$BC_ARRAY $DIR/gather_assemble_rapid.sh
-    
-    ##Clean up and run report script
-    cp ${lib}_assemblies/*.consensus.fasta ${lib}_consensus
-    $DIR/report_grid.py -c ${lib}_consensus
+## Call array job to gather, length filter and assemble reads in each barcode dir
+echo "Gathering reads for assembly for $RUN_ID"
+sbatch --export=ALL,RUN_ID=$RUN_ID,ANALYSIS_DIR=$ANALYSIS_DIR,ARTIC_DIR=$ARTIC_DIR, PRIMER_SET=$PRIMER_SET --wait --array=$BC_ARRAY $DIR/gather_assemble_minion.sh
 
-done
+## Do some clean up and reporting on the results.
+
+# Copy the consensus files to a dir
+CONSENSUN_DIR=$ANALYSIS_DIR/consensus
+mkdir $CONSENSUN_DIR
+cp $ANALYSIS_DIR/${RUN_ID}_assemblies/*.consensus.fasta $CONSENSUN_DIR
+
+## Run the reporting script
+$DIR/report.py --consensus_dir $CONSENSUN_DIR #--bucket $AWS_BUCKET
+
+echo ""
+echo "Report for $RUN_ID"
+cat $CONSENSUN_DIR/consensus_report.txt
 
 conda deactivate
-

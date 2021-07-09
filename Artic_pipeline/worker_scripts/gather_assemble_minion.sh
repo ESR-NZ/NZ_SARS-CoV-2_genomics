@@ -21,7 +21,7 @@ wait
 
 srun artic minion --medaka\
  --normalise 1000 --threads 24 --scheme-directory $ARTIC_DIR/primer_schemes\
- --read-file ${RUN_ID}_${BARCODE}.fastq nCoV-2019/V3 ${RUN_ID}_${BARCODE}
+ --read-file ${RUN_ID}_${BARCODE}.fastq nCoV-2019/$PRIMER_SET ${RUN_ID}_${BARCODE}
 
 
 

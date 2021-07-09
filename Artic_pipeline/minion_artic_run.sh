@@ -64,18 +64,38 @@ valid='KMC'
 [[ "$LOC" =~ [^$valid] ]] && [ ! -z "$LOC" ] && echo "Invalid location supplied" && exit 1
 
 
-## append DATA_DIR and ASSEMBLIES_DIR with location paths for data in and results out to the right place
-# Gridion paths
+## Primers control flow, this seems redundant...
+
+if [ -z "$PRIMERS" ] ## if not set, default to V1200 settings
+then
+    PRIMER_SET='V1200'
+    
+elif [ "$PRIMERS" = 'V3' ] ## set paths to KSC settings
+then
+    PRIMER_SET='V3'
+
+elif [ "$PRIMERS" = 'V2500' ] ## set paths to MASC
+then
+    PRIMER_SET='V2500'
+
+elif [ "$PRIMERS" = 'V1200' ] ## set paths to MASC
+then
+    PRIMER_SET='V1200'
+
+fi
+
+
 DATA_DIR=${DATA_DIR}/${LOC_DATA}
 ASSEMBLIES_DIR=${ASSEMBLIES_DIR}/${LOC_ASSEMBLY}
 
 #Sanity check
 echo "Config file = ${CONFIG}"
-echo "DATA_DIR = ${DATA_DIR}/${RUN_ID}"
+echo "DATA_DIR = ${DATA_DIR}"
 echo "ASSEMBLIES_DIR = ${ASSEMBLIES_DIR}"
 echo "artic_dir = $ARTIC_DIR"
 echo "Run_id  = $RUN_ID"
-echo ""
+echo "Primer set = $PRIMER_SET"
+
 
 ##Check for run id 
 [ -z "$RUN_ID" ] && echo "Please suppply run-id" && exit 1
@@ -92,13 +112,6 @@ ANALYSIS_DIR=$ASSEMBLIES_DIR/${RUN_ID}_analysis
 ##Script base dir for finding the resources for the pipeline
 DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null 2>&1 && pwd )"
 DIR=${DIR}/worker_scripts
-#Sanity check
-
-echo "Config file = ${CONFIG}"
-echo "DATA_DIR = ${DATA_DIR}"
-echo "ASSEMBLIES_DIR = ${ASSEMBLIES_DIR}"
-echo "artic_dir = $ARTIC_DIR"
-echo "Run_id  = $RUN_ID"
 
 
 ## Call the basecalling SLURM script (on GPU server)
@@ -123,7 +136,7 @@ echo ""
 
 ## Call array job to gather, length filter and assemble reads in each barcode dir
 echo "Gathering reads for assembly for $RUN_ID"
-sbatch --export=ALL,RUN_ID=$RUN_ID,ANALYSIS_DIR=$ANALYSIS_DIR,ARTIC_DIR=$ARTIC_DIR --wait --array=$BC_ARRAY $DIR/gather_assemble.sh
+sbatch --export=ALL,RUN_ID=$RUN_ID,ANALYSIS_DIR=$ANALYSIS_DIR,ARTIC_DIR=$ARTIC_DIR,PRIMER_SET=$PRIMER_SET --wait --array=$BC_ARRAY $DIR/gather_assemble_minion.sh
 
 ## Do some clean up and reporting on the results.
 
@@ -141,4 +154,3 @@ cat $CONSENSUN_DIR/consensus_report.txt
 
 conda deactivate
 
-## Find vcf files 
