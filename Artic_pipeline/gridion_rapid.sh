@@ -40,7 +40,6 @@ source $ACTIVATE $ARTIC_MEDAKA
 ## append DATA_DIR and ASSEMBLIES_DIR with gridion paths
 
 
-
 # Location specific paths
 if [ -z "$LOC" ] ## if not set, default to KSC settings
 then
@@ -65,7 +64,7 @@ valid='KM'
 [[ "$LOC" =~ [^$valid] ]] && [ ! -z "$LOC" ] && echo "Invalid location supplied" && exit 1
 
 
-## Primers control flow, this seems redundant...
+
 
 if [ -z "$PRIMERS" ] ## if not set, default to V1200 settings
 then

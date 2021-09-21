@@ -135,7 +135,7 @@ samtools index ${bwa_directory}/${x}_trimB_sort.bam
 ## non primer regions ##
 
 bcftools mpileup --max-depth 1000 -Ou -f ${analysis_files}/nCoV-2019.reference.fasta ${bwa_directory}/${x}_trimA_sort.bam  -R  ${analysis_files}/NSW_primer_A_comp.bed | bcftools call --ploidy 1 -mv > ${vcf_directory}/${x}_maskA.raw.vcf
-bcftools mpileup --max-depth 1000 -Ou -f ${analysis_files}/nCoV-2019.reference.fasta ${bwa_directory}/${x}_trimB_sort.bam  -R  ${analysis_files}/NSW_primer_A_comp.bed | bcftools call --ploidy 1 -mv > ${vcf_directory}/${x}_maskB.raw.vcf
+bcftools mpileup --max-depth 1000 -Ou -f ${analysis_files}/nCoV-2019.reference.fasta ${bwa_directory}/${x}_trimB_sort.bam  -R  ${analysis_files}/NSW_primer_B_comp.bed | bcftools call --ploidy 1 -mv > ${vcf_directory}/${x}_maskB.raw.vcf
 vcffilter -f "QUAL > 30" -f "DP > 19" ${vcf_directory}/${x}_maskA.raw.vcf > ${vcf_directory}/${x}_maskA_f.vcf
 vcffilter -f "QUAL > 30" -f "DP > 19" ${vcf_directory}/${x}_maskB.raw.vcf > ${vcf_directory}/${x}_maskB_f.vcf
 

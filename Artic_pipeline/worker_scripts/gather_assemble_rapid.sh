@@ -38,9 +38,7 @@ srun artic guppyplex --min-length 250 --max-length $MAX_LEN\
  --directory ${LIB}_basecalled_link/$BARCODE --prefix $(basename $LIB) 
 
 
-srun artic minion --medaka\
- --normalise 1000 --threads 24 --scheme-directory $ARTIC_DIR/primer_schemes\
- --read-file $(basename $LIB)_${BARCODE}.fastq nCoV-2019/${PRIMER_SET} $(basename $LIB)_${BARCODE}
-
-
+artic minion --medaka --medaka-model r941_min_high_g360\
+ --normalise 1000 --threads $SLURM_CPUS_PER_TASK --scheme-directory $ARTIC_DIR/primer_schemes\
+ --read-file $(basename $LIB)_${BARCODE}.fastq nCoV-2019/$PRIMER_SET $(basename $LIB)_${BARCODE}
 

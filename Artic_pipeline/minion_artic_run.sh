@@ -17,6 +17,11 @@ case $key in
     shift # past argument
     shift # past value
     ;;
+    -p|--primers) # can be V3, V1200, V2500
+    PRIMERS="$2"
+    shift # past argument
+    shift # past value
+    ;;
     *)    
     POSITIONAL+=("$1")
     shift # past argument
@@ -32,8 +37,6 @@ RUN_ID=$1
 ## bring in the config variables and activate the conda env
 source $CONFIG
 source $ACTIVATE $ARTIC_MEDAKA
-## append DATA_DIR and ASSEMBLIES_DIR with gridion paths
-
 
 # Location specific paths
 if [ -z "$LOC" ] ## if not set, default to KSC settings
@@ -57,6 +60,9 @@ then
     LOC_ASSEMBLY='CSC'
 
 fi
+
+DATA_DIR=${DATA_DIR}/${LOC_DATA}
+ASSEMBLIES_DIR=${ASSEMBLIES_DIR}/${LOC_ASSEMBLY}
 
 
 #Test for in invalid location parameters
@@ -85,17 +91,15 @@ then
 fi
 
 
-DATA_DIR=${DATA_DIR}/${LOC_DATA}
-ASSEMBLIES_DIR=${ASSEMBLIES_DIR}/${LOC_ASSEMBLY}
-
 #Sanity check
+echo ""
 echo "Config file = ${CONFIG}"
 echo "DATA_DIR = ${DATA_DIR}"
 echo "ASSEMBLIES_DIR = ${ASSEMBLIES_DIR}"
 echo "artic_dir = $ARTIC_DIR"
 echo "Run_id  = $RUN_ID"
 echo "Primer set = $PRIMER_SET"
-
+echo ""
 
 ##Check for run id 
 [ -z "$RUN_ID" ] && echo "Please suppply run-id" && exit 1
